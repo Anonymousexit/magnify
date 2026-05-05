@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Organism Size Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0b0f0e;
+      --surface:   #121918;
+      --border:    #1e2b29;
+      --accent:    #3dffc0;
+      --accent2:   #00c98a;
+      --muted:     #4a6460;
+      --text:      #d6ede9;
+      --text-dim:  #7ca09a;
+      --error:     #ff6b6b;
+      --radius:    14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(61,255,192,.10) 0%, transparent 70%),
+        repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(30,43,41,.5) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(30,43,41,.5) 40px);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: .75rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: .6rem;
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1.1;
+      color: var(--text);
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .subtitle {
+      margin-top: .75rem;
+      font-size: .95rem;
+      color: var(--text-dim);
+      font-weight: 300;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2.2rem 2.4rem;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 0 0 1px rgba(61,255,192,.04), 0 24px 60px rgba(0,0,0,.5);
+    }
+
+    .field-group {
+      display: flex;
+      gap: .75rem;
+      margin-bottom: 1.4rem;
+    }
+
+    .field { display: flex; flex-direction: column; gap: .45rem; flex: 1; }
+
+    label {
+      font-family: 'DM Mono', monospace;
+      font-size: .72rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    input, select {
+      background: #0d1614;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 1rem;
+      padding: .75rem 1rem;
+      width: 100%;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      -webkit-appearance: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent2);
+      box-shadow: 0 0 0 3px rgba(61,255,192,.12);
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%233dffc0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.4rem;
+      cursor: pointer;
+    }
+
+    select option { background: #121918; }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin: 1.5rem 0;
+      color: var(--muted);
+      font-size: .8rem;
+      font-family: 'DM Mono', monospace;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .output-row {
+      display: flex;
+      gap: .75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    button {
+      width: 100%;
+      padding: .9rem 1.5rem;
+      background: var(--accent);
+      color: #061210;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 1rem;
+      border: none;
+      border-radius: 9px;
+      cursor: pointer;
+      letter-spacing: .02em;
+      transition: background .2s, transform .1s, box-shadow .2s;
+      box-shadow: 0 0 20px rgba(61,255,192,.2);
+    }
+
+    button:hover { background: #5affcc; box-shadow: 0 0 28px rgba(61,255,192,.35); }
+    button:active { transform: scale(.98); }
+
+    /* Result panel */
+    #result-panel {
+      margin-top: 1.6rem;
+      background: #0d1a17;
+      border: 1px solid var(--accent2);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.6rem;
+      display: none;
+      animation: fadeUp .35s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .7rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: .5rem;
+    }
+
+    .result-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.4rem;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: .9rem;
+    }
+
+    .formula-box {
+      font-family: 'DM Mono', monospace;
+      font-size: .8rem;
+      color: var(--text-dim);
+      background: rgba(0,0,0,.3);
+      border-radius: 7px;
+      padding: .6rem .9rem;
+      border-left: 3px solid var(--muted);
+    }
+
+    /* Error */
+    #error-msg {
+      margin-top: 1.2rem;
+      background: rgba(255,107,107,.08);
+      border: 1px solid rgba(255,107,107,.3);
+      border-radius: 9px;
+      padding: .75rem 1rem;
+      color: var(--error);
+      font-size: .88rem;
+      display: none;
+      animation: fadeUp .3s ease both;
+    }
+
+    /* Microscope deco */
+    .deco {
+      position: fixed;
+      opacity: .04;
+      font-size: 18rem;
+      bottom: -3rem;
+      right: -2rem;
+      pointer-events: none;
+      user-select: none;
+      line-height: 1;
+    }
+
+    footer {
+      margin-top: 2rem;
+      font-size: .78rem;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+
+<span class="deco">🔬</span>
+
+<header>
+  <p class="eyebrow">Microscopy Tool</p>
+  <h1>Organism <em>Size</em><br>Calculator</h1>
+  <p class="subtitle">Actual size = Image size ÷ Magnification</p>
+</header>
+
+<div class="card">
+
+  <!-- Image size + unit -->
+  <div class="field-group">
+    <div class="field" style="flex:2">
+      <label>Image (Magnified) Size</label>
+      <input type="number" id="image_size" placeholder="e.g. 45" min="0" step="any"/>
+    </div>
+    <div class="field" style="flex:1">
+      <label>Unit</label>
+      <select id="input_unit">
+        <option value="mm">mm</option>
+        <option value="cm">cm</option>
+        <option value="m">m</option>
+        <option value="µm">µm</option>
+        <option value="nm">nm</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Magnification -->
+  <div class="field" style="margin-bottom:1.4rem">
+    <label>Magnification (×)</label>
+    <input type="number" id="magnification" placeholder="e.g. 400" min="0" step="any"/>
+  </div>
+
+  <div class="divider">output unit</div>
+
+  <!-- Output unit -->
+  <div class="output-row">
+    <div class="field">
+      <label>Display Result In</label>
+      <select id="output_unit">
+        <option value="µm" selected>µm  (micrometres)</option>
+        <option value="mm">mm  (millimetres)</option>
+        <option value="cm">cm  (centimetres)</option>
+        <option value="m">m   (metres)</option>
+        <option value="nm">nm  (nanometres)</option>
+      </select>
+    </div>
+  </div>
+
+  <button onclick="calculate()">Calculate Actual Size</button>
+
+  <div id="error-msg"></div>
+
+  <div id="result-panel">
+    <p class="result-label">Actual Size of Organism</p>
+    <p class="result-value" id="result-value">—</p>
+    <div class="formula-box" id="formula-box"></div>
+  </div>
+
+</div>
+
+<footer>Enter values above and press Calculate</footer>
+
+<script>
+  async function calculate() {
+    const image_size    = document.getElementById('image_size').value.trim();
+    const magnification = document.getElementById('magnification').value.trim();
+    const input_unit    = document.getElementById('input_unit').value;
+    const output_unit   = document.getElementById('output_unit').value;
+
+    hideAll();
+
+    if (!image_size || !magnification) {
+      showError('Please fill in both the image size and magnification fields.');
+      return;
+    }
+
+    try {
+      const res  = await fetch('/calculate', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ image_size, magnification, input_unit, output_unit })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showError(data.error || 'An error occurred.');
+        return;
+      }
+
+      document.getElementById('result-value').textContent = `${data.actual_size} ${data.output_unit}`;
+      document.getElementById('formula-box').textContent  = data.formula;
+      document.getElementById('result-panel').style.display = 'block';
+
+    } catch (e) {
+      showError('Could not reach the server. Is Flask running?');
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function hideAll() {
+    document.getElementById('error-msg').style.display   = 'none';
+    document.getElementById('result-panel').style.display = 'none';
+  }
+
+  // Allow Enter key to trigger calculate
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+</script>
+</body>
+</html>
